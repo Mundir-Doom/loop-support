@@ -1,8 +1,13 @@
+[providers]
+python = "3.11"
+node = "18"
+
 [phases.setup]
 nixPkgs = ["python311", "nodejs-18_x"]
 
 [phases.install]
 cmds = [
+  "cd Support_Page_Design/backend && python -m pip install --upgrade pip",
   "cd Support_Page_Design/backend && pip install -e .",
   "cd Support_Page_Design && npm install"
 ]
@@ -13,4 +18,4 @@ cmds = [
 ]
 
 [start]
-cmd = "cd Support_Page_Design/backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+cmd = "cd Support_Page_Design/backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
