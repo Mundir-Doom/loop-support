@@ -5,8 +5,9 @@ nixPkgs = ["python311", "nodejs-18_x"]
 
 [phases.install]
 cmds = [
+  "cd Support_Page_Design/backend && python -m ensurepip --upgrade",
   "cd Support_Page_Design/backend && python -m pip install --upgrade pip",
-  "cd Support_Page_Design/backend && pip install -e .",
+  "cd Support_Page_Design/backend && python -m pip install -e .",
   "cd Support_Page_Design && npm install"
 ]
 
