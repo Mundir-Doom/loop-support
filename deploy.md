@@ -27,11 +27,11 @@ python3 -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
   - Optional: add a Postgres (Render Addons → PostgreSQL). Render will inject `DATABASE_URL` which your app already supports.
 
 Deploy and wait until live. Confirm:
-- Open `https://<your-render-service>.onrender.com/api/health` → should return `{"status":"ok"}`.
+- Open `https://loop-support-backend.onrender.com/api/health` → should return `{"status":"ok"}`.
 
 Set Telegram webhook (once backend is live):
 ```
-curl -s -X POST "https://<your-render-service>.onrender.com/api/setup/telegram-webhook?webhook_url=https://<your-render-service>.onrender.com/api/telegram/webhook"
+curl -s -X POST "https://loop-support-backend.onrender.com/api/setup/telegram-webhook?webhook_url=https://loop-support-backend.onrender.com/api/telegram/webhook"
 ```
 
 ### 3) Frontend (Vercel - Vite React)
@@ -47,7 +47,7 @@ npm run build
 dist
 ```
 - Environment variables:
-  - `VITE_API_BASE_URL=https://<your-render-service>.onrender.com/api`
+  - `VITE_API_BASE_URL=https://loop-support-backend.onrender.com/api`
   - `VITE_SUPPORT_DEFAULT_CATEGORY=General` (optional)
 
 Deploy. Open the Vercel URL and use the app.
@@ -63,6 +63,7 @@ Deploy. Open the Vercel URL and use the app.
 - If you later map custom domains, just update Vercel env `VITE_API_BASE_URL` and re-deploy.
 - To clear Telegram backlogs: delete webhook then re-set to Render URL:
 ```
-curl -s "https://api.telegram.org/bot<YOUR_TOKEN>/deleteWebhook?drop_pending_updates=true"
-curl -s -X POST "https://api.telegram.org/bot<YOUR_TOKEN>/setWebhook" -d "url=https://<your-render-service>.onrender.com/api/telegram/webhook"
-```
+curl -s "https://api.telegram.org/bot8091078231:AAGECO_ItNQOt02zK2weB-p0t5ZRHH6KDTA/deleteWebhook?drop_pending_updates=true"
+
+curl -s -X POST "https://api.telegram.org/bot8091078231:AAGECO_ItNQOt02zK2weB-p0t5ZRHH6KDTA/setWebhook" -d "url=https://loop-support-backend.onrender.com/api
+/telegram/webhook"

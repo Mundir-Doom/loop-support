@@ -953,3 +953,56 @@ if frontend_path.exists():
         
         # Serve index.html for all non-API routes (SPA routing)
         return FileResponse(frontend_path / "index.html")
+
+
+# --- Diagnostic endpoint to simulate Telegram "Claim" flow ---
+@app.post("/api/test/claim")
+async def test_claim(ticket_id: int, agent_tg_id: int):
+    """Simulate a Telegram claim callback to verify assignment logic.
+
+    This does not rely on Telegram webhook delivery; it directly exercises the
+    same DB assignment path used in the webhook handler.
+    """
+    try:
+        from .models import SupportAgent, SupportTicket
+
+        with session_scope() as db:
+            # Ensure agent exists (create if needed)
+            agent_stmt = select(SupportAgent).where(SupportAgent.tg_chat_id == agent_tg_id)
+            agent = db.execute(agent_stmt).scalars().first()
+
+            if not agent:
+                agent = SupportAgent(
+                    name="Test Agent",
+                    tg_chat_id=agent_tg_id,
+                    is_active=True,
+                    created_at=datetime.utcnow(),
+                )
+                db.add(agent)
+                db.flush()
+
+            ticket = db.get(SupportTicket, ticket_id)
+            if not ticket:
+                raise HTTPException(status_code=404, detail="Ticket not found")
+
+            already_claimed = ticket.assigned_agent_id is not None
+            if not already_claimed:
+                ticket.assigned_agent_id = agent.id
+                ticket.status = "claimed"
+                ticket.claimed_at = datetime.utcnow()
+                db.commit()
+
+        # Notify agent similarly to webhook flow
+        await telegram_service.notify_agent_assigned(str(agent_tg_id), ticket_id)
+
+        return {
+            "ok": True,
+            "ticket_id": ticket_id,
+            "agent_tg_id": agent_tg_id,
+            "assigned": True,
+            "already_claimed": already_claimed,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
