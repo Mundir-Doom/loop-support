@@ -18,28 +18,28 @@ const supportSections: SupportSection[] = [
     title: "Marketing",
     description: "Get help with campaigns, branding, and content strategy from our marketing experts.",
     gradient: "#FFFFFF",
-    backgroundImage: "https://i.ibb.co/HpnZvRMw/1b3d3e279b26f64879bc68b6b00992f0c2f372e2.png"
+    backgroundImage: "https://cdn.jsdelivr.net/gh/Mundir-Doom/loop-support@main/Support_Page_Design/src/assets/1b3d3e279b26f64879bc68b6b00992f0c2f372e2.png"
   },
   {
     id: "sales",
     title: "Sales",
     description: "Connect with our sales team for pricing, demos, and custom solutions for your business.",
     gradient: "#FFFFFF",
-    backgroundImage: "https://i.ibb.co/1fCPy5zd/2302151c517efebea1d55362ce28f3214ff746cc.png"
+    backgroundImage: "https://cdn.jsdelivr.net/gh/Mundir-Doom/loop-support@main/Support_Page_Design/src/assets/2302151c517efebea1d55362ce28f3214ff746cc.png"
   },
   {
     id: "technical",
     title: "Technical",
     description: "Receive technical support for troubleshooting, integrations, and platform issues.",
     gradient: "#FFFFFF",
-    backgroundImage: "https://i.ibb.co/4wkzS0Q9/39c08f6b5f5448d460f0f3185fe17e46dd653020.png"
+    backgroundImage: "https://cdn.jsdelivr.net/gh/Mundir-Doom/loop-support@main/Support_Page_Design/src/assets/39c08f6b5f5448d460f0f3185fe17e46dd653020.png"
   },
   {
     id: "developer",
     title: "Developer",
     description: "Access API documentation, SDK support, and developer resources for building integrations.",
     gradient: "#FFFFFF",
-    backgroundImage: "https://i.ibb.co/vvVjpDLD/0d961142b622ac52cec4f149ceb19aadfa1e9900.png"
+    backgroundImage: "https://cdn.jsdelivr.net/gh/Mundir-Doom/loop-support@main/Support_Page_Design/src/assets/0d961142b622ac52cec4f149ceb19aadfa1e9900.png"
   }
 ];
 
