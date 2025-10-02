@@ -16,30 +16,40 @@ export function useSupportSession(): UseSupportSessionResult {
   const [isLoading, setIsLoading] = useState<boolean>(() => !session);
   const [error, setError] = useState<string | undefined>(undefined);
   const isFetching = useRef(false);
+  const inFlightPromise = useRef<Promise<SupportSession | undefined> | null>(null);
 
   const refresh = useCallback(async () => {
     if (isFetching.current) {
-      return session;
+      if (inFlightPromise.current) {
+        return inFlightPromise.current;
+      }
+      return Promise.resolve(session);
     }
 
     isFetching.current = true;
     setIsLoading(true);
-    try {
-      const freshSession = await createSupportSession();
-      setSession(freshSession);
-      persistSession(freshSession);
-      setError(undefined);
-      return freshSession;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to initialize support";
-      setError(message);
-      setSession(undefined);
-      clearStoredSession();
-      return undefined;
-    } finally {
-      isFetching.current = false;
-      setIsLoading(false);
-    }
+    const promise = (async () => {
+      try {
+        const freshSession = await createSupportSession();
+        setSession(freshSession);
+        persistSession(freshSession);
+        setError(undefined);
+        return freshSession;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to initialize support";
+        setError(message);
+        setSession(undefined);
+        clearStoredSession();
+        return undefined;
+      } finally {
+        isFetching.current = false;
+        inFlightPromise.current = null;
+        setIsLoading(false);
+      }
+    })();
+
+    inFlightPromise.current = promise;
+    return promise;
   }, [session]);
 
   const reset = useCallback(() => {
@@ -47,6 +57,8 @@ export function useSupportSession(): UseSupportSessionResult {
     setSession(undefined);
     setError(undefined);
     setIsLoading(false);
+    isFetching.current = false;
+    inFlightPromise.current = null;
   }, []);
 
   useEffect(() => {

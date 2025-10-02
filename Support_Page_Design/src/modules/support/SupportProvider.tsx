@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { ReactNode, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { fetchConversation, submitTicket as submitTicketApi, sendVisitorMessage, closeTicket as closeTicketApi, ApiError } from "./api";
 import { useSupportSession } from "./useSupportSession";
 import { ConversationSnapshot, SupportMessage, SupportState, SupportTicket, TicketFormInput } from "./types";
@@ -124,7 +124,7 @@ export function SupportProvider({ children }: { children: ReactNode }) {
           setState((prev) => ({ ...prev, isTyping: false }));
         }
       }
-    }, 4000);
+    }, 1500);
 
     return () => {
       clearInterval(interval);

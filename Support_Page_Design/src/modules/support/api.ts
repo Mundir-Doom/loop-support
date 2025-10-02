@@ -34,6 +34,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       "content-type": "application/json"
     },
     body: body ? JSON.stringify(body) : undefined
+  }).catch((error: unknown) => {
+    throw new ApiError("Unable to reach support service", undefined, error);
   });
 
   const payload = await response.json().catch(() => ({}));

@@ -42,19 +42,10 @@ app.add_middleware(
 
 Base.metadata.create_all(bind=engine)
 
-# Serve frontend static files
+# Serve frontend static files (mounted early), but register SPA catch-all AFTER API routes
 frontend_path = Path(__file__).parent.parent.parent / "build"
 if frontend_path.exists():
     app.mount("/static", StaticFiles(directory=frontend_path), name="static")
-    
-    @app.get("/{full_path:path}")
-    async def serve_frontend(full_path: str):
-        # Don't serve API routes as static files
-        if full_path.startswith("api/"):
-            raise HTTPException(status_code=404, detail="Not found")
-        
-        # Serve index.html for all non-API routes (SPA routing)
-        return FileResponse(frontend_path / "index.html")
 
 
 def _serialize_ticket(ticket: Optional[SupportTicket]) -> Optional[SupportTicketSchema]:
@@ -129,9 +120,11 @@ async def create_session(payload: SessionCreateRequest) -> SessionResponse:
 
 @app.get("/api/session/{session_id}", response_model=ConversationResponse)
 async def get_conversation(session_id: str) -> ConversationResponse:
+    print(f"DEBUG: Fetching conversation for session {session_id}")
     with session_scope() as db:
         session = db.get(SupportSession, session_id)
         if session is None:
+            print(f"DEBUG: Session {session_id} not found when fetching conversation")
             raise HTTPException(status_code=404, detail="Session not found")
 
         session.last_seen_at = datetime.utcnow()
@@ -542,6 +535,18 @@ async def create_new_ticket(session_id: str):
             if not session:
                 raise HTTPException(status_code=404, detail="Session not found")
             
+            # Close all previous tickets for this session before creating a new one
+            prev_tickets_stmt = (
+                select(SupportTicket)
+                .where(SupportTicket.session_id == session_id)
+                .order_by(desc(SupportTicket.created_at))
+            )
+            prev_tickets = db.execute(prev_tickets_stmt).scalars().all()
+            for t in prev_tickets:
+                if t.status != "closed":
+                    t.status = "closed"
+                    t.closed_at = datetime.utcnow()
+            
             # Create a new ticket
             new_ticket = SupportTicket(
                 session_id=session_id,
@@ -613,9 +618,21 @@ async def reopen_ticket(ticket_id: int):
 
 
 @app.post("/api/setup/telegram-webhook")
-async def setup_telegram_webhook(webhook_url: str):
+async def setup_telegram_webhook(webhook_url: str, drop_pending: bool = False):
     """Set the Telegram webhook URL"""
     try:
+        # Optionally drop pending updates if backlog built up
+        if drop_pending:
+            try:
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    await client.post(
+                        f"https://api.telegram.org/bot{telegram_service.bot_token}/deleteWebhook",
+                        params={"drop_pending_updates": True}
+                    )
+            except Exception:
+                pass
+
         success = await telegram_service.set_webhook(webhook_url)
         return {
             "ok": success,
@@ -924,3 +941,15 @@ async def setup_info():
 @app.get("/")
 async def root():
     return {"message": "Support backend running"}
+
+
+# SPA catch-all must be registered last so API routes take precedence
+if frontend_path.exists():
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        # Don't serve API routes as static files
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        
+        # Serve index.html for all non-API routes (SPA routing)
+        return FileResponse(frontend_path / "index.html")

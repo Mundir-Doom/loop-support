@@ -1,30 +1,30 @@
- important :
- keep design & logic separate
-	•	Treat the exported React components as UI-only (just styling/layout).
-	•	Keep your business logic (Supabase calls, Telegram API, session management) in separate hooks/containers.
-	•	That way, when you re-export from Figma, you only swap the dumb UI component and don’t break your app 
+important :
+keep design & logic separate
 
-    0) What we’re building
+- Treat the exported React components as UI-only (just styling/layout).
+- Keep your business logic (API calls, Telegram integration, session management) in separate hooks/containers.
+- That way, when you re-export from Figma, you only swap the dumb UI component and don’t break your app.
+
+0) What we’re building
 
 Flow:
-Visitor (React widget) ⇄ Supabase (DB + Realtime + Edge Functions) ⇄ Telegram Bot ⇄ Agents on Telegram
-	•	Anonymous visitor session via a signed custom JWT (no email/login).
-	•	Messages stored in Postgres; RLS ensures each visitor only sees their thread.
-	•	Edge Functions:
-	•	session-new: mint visitor token + create session.
-	•	visitor-send: insert visitor message, auto-create ticket, notify/route to Telegram.
-	•	tg-webhook: receive agent replies & button claims from Telegram, save & fan-out.
-	•	Realtime feed into the React widget.
+Visitor (React widget) ⇄ FastAPI backend (SQLite/Postgres) ⇄ Telegram Bot ⇄ Agents on Telegram
+- Anonymous visitor session managed by backend.
+- Messages and tickets stored in the backend database.
+- Telegram webhook delivers agent actions (Claim/Pass/Close) and messages to backend.
+- Frontend polls the backend for conversation updates.
 
-1) Supabase project setup
-	1.	Create a Supabase project. Grab:
-
-	•	SUPABASE_URL
-	•	SUPABASE_ANON_KEY
-	•	SUPABASE_SERVICE_ROLE_KEY
-	•	JWT secret (Settings → API → JWT secret). We’ll use it to mint visitor tokens.
-
-	2.	SQL schema (run in SQL Editor)
+1) Backend setup (FastAPI)
+  - Configure `.env` in `Support_Page_Design/backend` with:
+    - `TELEGRAM_BOT_TOKEN`
+    - `SUPPORT_GROUP_CHAT_ID`
+  - Run `backend/run_with_tunnel.sh` to start the API and expose a public URL for Telegram.
+  - API routes:
+    - `POST /api/session` – create session
+    - `GET /api/session/{session_id}` – fetch conversation
+    - `POST /api/session/{session_id}/messages` – send visitor message (creates ticket if needed)
+    - `POST /api/tickets/{ticket_id}/close` – close ticket
+    - `POST /api/telegram/webhook` – Telegram updates
     -- Enable needed extensions
 create extension if not exists "uuid-ossp";
 create extension if not exists "pgcrypto";
@@ -183,28 +183,9 @@ Deno.serve(async (req) => {
   }
 });
 
-Env vars (Dashboard → Functions)
-SUPABASE_URL=...
-SUPABASE_SERVICE_ROLE_KEY=...
-JWT_SECRET=...        # the project JWT secret
-
-Deploy
-supabase functions deploy session-new --no-verify-jwt
-3) Edge Function: visitor-send (write message + route)
-	•	Verifies Authorization: Bearer <visitor_token> (we’ll verify signature)
-	•	Finds or creates an open ticket for this session
-	•	Inserts the visitor’s message
-	•	If newly created ticket → post a Claim/Pass message to the support group on Telegram
-	•	If already claimed → forward to the assigned agent’s Telegram DM
-
-File: supabase/functions/visitor-send/index.ts
-
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const serviceKey  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const jwtSecret   = Deno.env.get("JWT_SECRET")!;
-const tgToken     = Deno.env.get("TELEGRAM_BOT_TOKEN")!;
+2) Telegram
+  - Use `POST /api/setup/telegram-webhook?webhook_url=...` to set webhook to your tunnel URL.
+  - Claim/Pass buttons and close actions are handled in `backend/app/main.py` webhook handler.
 const supportGroupChatId = Deno.env.get("SUPPORT_GROUP_CHAT_ID")!; // e.g., -1001234567890
 
 // very small JWT verify (HS256)
@@ -302,31 +283,8 @@ Deno.serve(async (req) => {
   }
 });
 
-Env vars:
-SUPABASE_URL=...
-SUPABASE_SERVICE_ROLE_KEY=...
-JWT_SECRET=...
-TELEGRAM_BOT_TOKEN=123456:ABC...
-SUPPORT_GROUP_CHAT_ID=-1001234567890
-
-Deploy
-supabase functions deploy visitor-send --no-verify-jwt
-
-4) Edge Function: tg-webhook (Telegram → DB → Realtime)
-	•	Handles button claims (CLAIM#<id>)
-	•	Saves agent messages and relays them to the visitor (DB insert triggers Realtime to the web)
-
-File: supabase/functions/tg-webhook/index.ts
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-);
-
-Deno.serve(async (req) => {
-  try {
-    const update = await req.json();
+3) Frontend
+  - `VITE_API_BASE_URL` points to the backend, polling every 1.5s to reflect ticket/agent updates.
 
     // 1) Inline button claims
     if (update.callback_query) {

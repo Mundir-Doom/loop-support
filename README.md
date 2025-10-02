@@ -94,3 +94,6 @@ A full-stack support ticket system with React frontend and FastAPI backend, feat
 ## License
 
 MIT License
+
+Backend: cd Support_Page_Design/backend && bash run_with_tunnel.sh
+Frontend: cd Support_Page_Design && npm run dev -- --host --port 5174

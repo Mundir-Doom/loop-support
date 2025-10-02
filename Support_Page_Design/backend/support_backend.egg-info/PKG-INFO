@@ -8,6 +8,7 @@ Requires-Dist: uvicorn[standard]~=0.30.0
 Requires-Dist: sqlalchemy~=2.0
 Requires-Dist: pydantic~=2.8
 Requires-Dist: python-dotenv~=1.0
+Requires-Dist: httpx~=0.25.0
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: httpx; extra == "dev"

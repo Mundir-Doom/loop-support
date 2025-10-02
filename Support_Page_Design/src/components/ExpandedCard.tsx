@@ -1,3 +1,4 @@
+import React from "react";
 import { motion, useMotionValue, useTransform, AnimatePresence } from "motion/react";
 import { X, ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -11,6 +12,7 @@ interface SupportBindings {
   isLoading: boolean;
   isSending: boolean;
   isSubmittingTicket: boolean;
+  isTyping?: boolean;
   isConnected?: boolean;
   error?: string;
   refresh: () => Promise<void>;
@@ -21,7 +23,6 @@ interface SupportBindings {
   ticketId?: number;
   closeTicket?: () => Promise<void>;
   openTicketForm?: () => void;
-  closeTicket?: () => Promise<void>;
 }
 
 interface ExpandedCardProps {
@@ -293,7 +294,12 @@ export function ExpandedCard({ title, description, gradient, backgroundImage, on
             onSubmit={async (data: TicketData) => {
               if (!support) return;
               await support.submitTicket(data);
+              // Ensure latest ticket state is loaded, then switch to chat
+              try {
+                await support.refresh();
+              } catch {}
               setShowTicketForm(false);
+              setShowChat(true);
             }}
             isSubmitting={support?.isSubmittingTicket}
             error={support?.error}

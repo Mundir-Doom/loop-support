@@ -5,6 +5,7 @@ app/database.py
 app/main.py
 app/models.py
 app/schemas.py
+app/telegram.py
 support_backend.egg-info/PKG-INFO
 support_backend.egg-info/SOURCES.txt
 support_backend.egg-info/dependency_links.txt
