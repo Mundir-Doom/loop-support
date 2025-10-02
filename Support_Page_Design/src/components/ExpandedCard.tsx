@@ -1,13 +1,12 @@
-import React from "react";
-import { motion, useMotionValue, useTransform, AnimatePresence } from "motion/react";
-import { X, ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion, useMotionValue, useTransform } from "motion/react";
+import { ArrowRight, X } from "lucide-react";
 import { SupportModal } from "./SupportModal";
 import { ChatWindow } from "./ChatWindow";
 import { TicketForm, TicketData } from "./TicketForm";
-import { SupportMessage } from "../modules/support";
+import type { SupportMessage } from "../modules/support";
 
-interface SupportBindings {
+export interface SupportBindings {
   messages: SupportMessage[];
   isLoading: boolean;
   isSending: boolean;
@@ -15,14 +14,13 @@ interface SupportBindings {
   isTyping?: boolean;
   isConnected?: boolean;
   error?: string;
+  ticketStatus?: "open" | "claimed" | "closed";
+  ticketId?: number;
   refresh: () => Promise<void>;
   sendMessage: (text: string) => Promise<void>;
   submitTicket: (data: TicketData) => Promise<void>;
   startNewConversation?: () => Promise<void>;
-  ticketStatus?: "open" | "claimed" | "closed";
-  ticketId?: number;
   closeTicket?: () => Promise<void>;
-  openTicketForm?: () => void;
 }
 
 interface ExpandedCardProps {
@@ -51,21 +49,24 @@ export function ExpandedCard({ title, description, gradient, backgroundImage, on
     }
   };
 
-  const supportActions = useMemo(() => ({
-    openModal: () => {
-      setShowSupportModal(true);
-      void support?.refresh();
-    },
-    startChat: () => {
-      setShowSupportModal(false);
-      setShowChat(true);
-      void support?.refresh();
-    },
-    openTicketForm: () => {
-      setShowSupportModal(false);
-      setShowTicketForm(true);
-    }
-  }), [support]);
+  const supportActions = useMemo(() => {
+    const refresh = support?.refresh;
+    return {
+      openModal: () => {
+        setShowSupportModal(true);
+        if (refresh) void refresh();
+      },
+      startChat: () => {
+        setShowSupportModal(false);
+        setShowChat(true);
+        if (refresh) void refresh();
+      },
+      openTicketForm: () => {
+        setShowSupportModal(false);
+        setShowTicketForm(true);
+      }
+    };
+  }, [support?.refresh]);
 
   return (
     <motion.div
@@ -73,25 +74,16 @@ export function ExpandedCard({ title, description, gradient, backgroundImage, on
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{
-        duration: 0.3,
-        ease: [0.32, 0.72, 0, 1]
-      }}
+      transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
     >
       <motion.div
         className="absolute inset-0"
-        style={{
-          backgroundColor: "rgba(0, 0, 0, 0.30)",
-          opacity: opacity
-        }}
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.30)", opacity }}
         onClick={onClose}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{
-          duration: 0.3,
-          ease: [0.32, 0.72, 0, 1]
-        }}
+        transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
       />
 
       <motion.div
@@ -149,10 +141,7 @@ export function ExpandedCard({ title, description, gradient, backgroundImage, on
           exit={{ opacity: 0, scale: 0.8 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          transition={{
-            duration: 0.3,
-            ease: [0.32, 0.72, 0, 1]
-          }}
+          transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
         >
           <X size={22} strokeWidth={2.5} style={{ color: "#0B0B0C" }} />
         </motion.button>
@@ -160,14 +149,14 @@ export function ExpandedCard({ title, description, gradient, backgroundImage, on
         <div className="absolute inset-x-0 bottom-0 px-6 pb-6 flex flex-col">
           <motion.h2
             layoutId={`card-title-${id}`}
-            className="text-[32px] leading-tight mb-3"
+            className="text-[32px] leading-tight mb-3 text-left"
             style={{ fontWeight: 600, color: "#0B0B0C" }}
           >
             {title}
           </motion.h2>
           <motion.p
             layoutId={`card-description-${id}`}
-            className="text-[16px] leading-relaxed mb-6"
+            className="text-[16px] leading-relaxed mb-6 text-left"
             style={{ fontWeight: 400, color: "#55595F" }}
           >
             {description}
@@ -188,11 +177,7 @@ export function ExpandedCard({ title, description, gradient, backgroundImage, on
             exit={{ opacity: 0, y: 20 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            transition={{
-              delay: 0.1,
-              duration: 0.4,
-              ease: [0.32, 0.72, 0, 1]
-            }}
+            transition={{ delay: 0.1, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
           >
             <span>Get Support</span>
             <ArrowRight size={18} strokeWidth={2.5} />
@@ -203,21 +188,14 @@ export function ExpandedCard({ title, description, gradient, backgroundImage, on
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            transition={{
-              delay: 0.15,
-              duration: 0.4,
-              ease: [0.32, 0.72, 0, 1]
-            }}
+            transition={{ delay: 0.15, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
           >
             <motion.button
               className="w-full h-14 rounded-2xl flex items-center px-5"
               style={{ backgroundColor: "rgba(11, 11, 12, 0.06)" }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              transition={{
-                duration: 0.2,
-                ease: [0.32, 0.72, 0, 1]
-              }}
+              transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
             >
               <span style={{ color: "#0B0B0C", fontSize: "15px", fontWeight: 500 }}>
                 Contact via email
@@ -228,10 +206,7 @@ export function ExpandedCard({ title, description, gradient, backgroundImage, on
               style={{ backgroundColor: "rgba(11, 11, 12, 0.06)" }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              transition={{
-                duration: 0.2,
-                ease: [0.32, 0.72, 0, 1]
-              }}
+              transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
             >
               <span style={{ color: "#0B0B0C", fontSize: "15px", fontWeight: 500 }}>
                 Schedule a call
@@ -242,10 +217,7 @@ export function ExpandedCard({ title, description, gradient, backgroundImage, on
               style={{ backgroundColor: "rgba(11, 11, 12, 0.06)" }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              transition={{
-                duration: 0.2,
-                ease: [0.32, 0.72, 0, 1]
-              }}
+              transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
             >
               <span style={{ color: "#0B0B0C", fontSize: "15px", fontWeight: 500 }}>
                 Browse FAQs
@@ -261,48 +233,34 @@ export function ExpandedCard({ title, description, gradient, backgroundImage, on
             onClose={() => setShowSupportModal(false)}
             onStartChat={supportActions.startChat}
             onOpenTicket={supportActions.openTicketForm}
-            onStartNewConversation={support?.startNewConversation}
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
-        {showChat && (
+        {showChat && support && (
           <ChatWindow
             onClose={() => setShowChat(false)}
-            messages={support?.messages ?? []}
-            onSend={support?.sendMessage ?? (async () => {})}
-            onRefresh={support?.refresh}
-            onStartNewConversation={support?.startNewConversation}
+            support={support}
             onOpenTicket={supportActions.openTicketForm}
-            onCloseTicket={support?.closeTicket}
-            isLoading={support?.isLoading ?? false}
-            isSending={support?.isSending ?? false}
-            isTyping={support?.isTyping ?? false}
-            isConnected={support?.isConnected ?? false}
-            error={support?.error}
-            ticketStatus={support?.ticketStatus}
-            ticketId={support?.ticketId}
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
-        {showTicketForm && (
+        {showTicketForm && support && (
           <TicketForm
             onClose={() => setShowTicketForm(false)}
             onSubmit={async (data: TicketData) => {
-              if (!support) return;
               await support.submitTicket(data);
-              // Ensure latest ticket state is loaded, then switch to chat
               try {
                 await support.refresh();
               } catch {}
               setShowTicketForm(false);
               setShowChat(true);
             }}
-            isSubmitting={support?.isSubmittingTicket}
-            error={support?.error}
+            isSubmitting={support.isSubmittingTicket}
+            error={support.error}
           />
         )}
       </AnimatePresence>

@@ -1,6 +1,7 @@
 import { motion, useMotionValue, useTransform, PanInfo } from "motion/react";
 import { X } from "lucide-react";
 import { FormEvent, useState } from "react";
+import type { TicketFormInput } from "../modules/support";
 
 interface TicketFormProps {
   onClose: () => void;
@@ -9,12 +10,7 @@ interface TicketFormProps {
   error?: string;
 }
 
-export interface TicketData {
-  name: string;
-  email: string;
-  issue: string;
-  priority: "low" | "medium" | "high";
-}
+export type TicketData = TicketFormInput;
 
 export function TicketForm({ onClose, onSubmit, isSubmitting = false, error }: TicketFormProps) {
   const y = useMotionValue(0);
@@ -70,9 +66,9 @@ export function TicketForm({ onClose, onSubmit, isSubmitting = false, error }: T
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0, bottom: 0.2 }}
         onDragEnd={handleDragEnd}
-        style={{ y }}
         className="relative w-full bg-white touch-pan-y"
         style={{
+          y,
           borderTopLeftRadius: "24px",
           borderTopRightRadius: "24px",
           boxShadow: "0 -4px 24px rgba(0, 0, 0, 0.15)",

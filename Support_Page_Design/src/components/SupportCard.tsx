@@ -91,14 +91,14 @@ export function SupportCard({ title, description, gradient, backgroundImage, onC
         >
           <motion.h2 
             layoutId={`card-title-${id}`}
-            className="text-[26px] leading-tight mb-3" 
+            className="text-[26px] leading-tight mb-3 text-left" 
             style={{ fontWeight: 600, color: '#0B0B0C' }}
           >
             {title}
           </motion.h2>
           <motion.p 
             layoutId={`card-description-${id}`}
-            className="text-[15px] leading-snug line-clamp-2 mb-5" 
+            className="text-[15px] leading-snug line-clamp-2 mb-5 text-left" 
             style={{ fontWeight: 400, color: '#55595F' }}
           >
             {description}

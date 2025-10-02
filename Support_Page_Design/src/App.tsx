@@ -1,11 +1,7 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence } from "motion/react";
 import { SupportCard } from "./components/SupportCard";
-import { ExpandedCard } from "./components/ExpandedCard";
-import marketingBg from "figma:asset/1b3d3e279b26f64879bc68b6b00992f0c2f372e2.png";
-import salesBg from "figma:asset/2302151c517efebea1d55362ce28f3214ff746cc.png";
-import technicalBg from "figma:asset/39c08f6b5f5448d460f0f3185fe17e46dd653020.png";
-import developerBg from "figma:asset/0d961142b622ac52cec4f149ceb19aadfa1e9900.png";
+import { ExpandedCard, SupportBindings } from "./components/ExpandedCard";
 import { useSupport } from "./modules/support";
 
 interface SupportSection {
@@ -21,35 +17,87 @@ const supportSections: SupportSection[] = [
     id: "marketing",
     title: "Marketing",
     description: "Get help with campaigns, branding, and content strategy from our marketing experts.",
-    gradient: "linear-gradient(135deg, #FFDDE1 0%, #BAC8FF 100%)",
-    backgroundImage: marketingBg
+    gradient: "#FFFFFF",
+    backgroundImage: "https://i.ibb.co/HpnZvRMw/1b3d3e279b26f64879bc68b6b00992f0c2f372e2.png"
   },
   {
     id: "sales",
     title: "Sales",
     description: "Connect with our sales team for pricing, demos, and custom solutions for your business.",
-    gradient: "linear-gradient(135deg, #D4FC79 0%, #96E6A1 100%)",
-    backgroundImage: salesBg
+    gradient: "#FFFFFF",
+    backgroundImage: "https://i.ibb.co/1fCPy5zd/2302151c517efebea1d55362ce28f3214ff746cc.png"
   },
   {
     id: "technical",
     title: "Technical",
     description: "Receive technical support for troubleshooting, integrations, and platform issues.",
-    gradient: "linear-gradient(135deg, #C9FFBF 0%, #FFAFBD 100%)",
-    backgroundImage: technicalBg
+    gradient: "#FFFFFF",
+    backgroundImage: "https://i.ibb.co/4wkzS0Q9/39c08f6b5f5448d460f0f3185fe17e46dd653020.png"
   },
   {
     id: "developer",
     title: "Developer",
     description: "Access API documentation, SDK support, and developer resources for building integrations.",
-    gradient: "linear-gradient(135deg, #89F7FE 0%, #66A6FF 100%)",
-    backgroundImage: developerBg
+    gradient: "#FFFFFF",
+    backgroundImage: "https://i.ibb.co/vvVjpDLD/0d961142b622ac52cec4f149ceb19aadfa1e9900.png"
   }
 ];
 
 export default function App() {
   const [expandedCard, setExpandedCard] = useState<SupportSection | null>(null);
   const support = useSupport();
+
+  const {
+    messages,
+    isInitializing,
+    isSending,
+    isSubmittingTicket,
+    isTyping,
+    isConnected,
+    error,
+    ticket,
+    refreshAll,
+    sendChatMessage,
+    submitTicket,
+    startNewConversation,
+    closeTicket
+  } = support;
+
+  const bindings = useMemo<SupportBindings>(() => ({
+    messages,
+    isLoading: isInitializing,
+    isSending,
+    isSubmittingTicket,
+    isTyping,
+    isConnected,
+    error,
+    ticketStatus: ticket?.status,
+    ticketId: ticket?.id,
+    refresh: refreshAll,
+    sendMessage: sendChatMessage,
+    submitTicket,
+    startNewConversation,
+    closeTicket
+  }), [
+    messages,
+    isInitializing,
+    isSending,
+    isSubmittingTicket,
+    isTyping,
+    isConnected,
+    error,
+    ticket,
+    refreshAll,
+    sendChatMessage,
+    submitTicket,
+    startNewConversation,
+    closeTicket
+  ]);
+
+  useEffect(() => {
+    if (!expandedCard) return;
+    void refreshAll();
+  }, [expandedCard, refreshAll]);
 
   return (
     <div
@@ -72,10 +120,7 @@ export default function App() {
               description={section.description}
               gradient={section.gradient}
               backgroundImage={section.backgroundImage}
-              onClick={() => {
-                setExpandedCard(section);
-                void support.refreshAll();
-              }}
+              onClick={() => setExpandedCard(section)}
               index={index}
             />
           ))}
@@ -91,21 +136,7 @@ export default function App() {
             gradient={expandedCard.gradient}
             backgroundImage={expandedCard.backgroundImage}
             onClose={() => setExpandedCard(null)}
-            support={{
-              messages: support.messages,
-              isLoading: support.isInitializing,
-              isSending: support.isSending,
-              isSubmittingTicket: support.isSubmittingTicket,
-              isConnected: support.isConnected,
-              error: support.error,
-              refresh: support.refreshAll,
-              sendMessage: support.sendChatMessage,
-              submitTicket: support.submitTicket,
-              startNewConversation: support.startNewConversation,
-              closeTicket: support.closeTicket,
-              ticketStatus: support.ticket?.status,
-              ticketId: support.ticket?.id
-            }}
+            support={bindings}
           />
         )}
       </AnimatePresence>

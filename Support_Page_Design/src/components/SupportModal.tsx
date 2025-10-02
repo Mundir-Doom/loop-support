@@ -5,10 +5,9 @@ interface SupportModalProps {
   onClose: () => void;
   onStartChat: () => void;
   onOpenTicket: () => void;
-  onStartNewConversation?: () => Promise<void>;
 }
 
-export function SupportModal({ onClose, onStartChat, onOpenTicket, onStartNewConversation }: SupportModalProps) {
+export function SupportModal({ onClose, onStartChat, onOpenTicket }: SupportModalProps) {
   const y = useMotionValue(0);
   const opacity = useTransform(y, [0, 300], [0.35, 0]);
 
@@ -46,9 +45,9 @@ export function SupportModal({ onClose, onStartChat, onOpenTicket, onStartNewCon
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0, bottom: 0.2 }}
         onDragEnd={handleDragEnd}
-        style={{ y }}
         className="relative w-full bg-white touch-pan-y"
         style={{
+          y,
           borderTopLeftRadius: '24px',
           borderTopRightRadius: '24px',
           boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.15)'
