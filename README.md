@@ -97,3 +97,6 @@ MIT License
 
 Backend: cd Support_Page_Design/backend && bash run_with_tunnel.sh
 Frontend: cd Support_Page_Design && npm run dev -- --host --port 5174
+
+https://github.com/Mundir-Doom/loop-support-backend.git
+https://github.com/Mundir-Doom/loop-support.git
