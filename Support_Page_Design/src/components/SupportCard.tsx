@@ -1,6 +1,6 @@
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
-import { useRef } from 'react';
 
 interface SupportCardProps {
   title: string;
@@ -14,6 +14,9 @@ interface SupportCardProps {
 
 export function SupportCard({ title, description, gradient, backgroundImage, onClick, index, id }: SupportCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [shouldLoadImage, setShouldLoadImage] = useState(false);
+  
   const { scrollYProgress } = useScroll({
     target: cardRef,
     offset: ["start end", "end start"]
@@ -22,6 +25,39 @@ export function SupportCard({ title, description, gradient, backgroundImage, onC
   // Parallax effect: background moves slower than foreground
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "15%"]);
   const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "5%"]);
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    if (!cardRef.current || !backgroundImage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setShouldLoadImage(true);
+            observer.disconnect();
+          }
+        });
+      },
+      {
+        rootMargin: '100px', // Start loading 100px before card enters viewport
+        threshold: 0.01
+      }
+    );
+
+    observer.observe(cardRef.current);
+
+    return () => observer.disconnect();
+  }, [backgroundImage]);
+
+  // Preload image when shouldLoadImage is true
+  useEffect(() => {
+    if (!shouldLoadImage || !backgroundImage) return;
+
+    const img = new Image();
+    img.src = backgroundImage;
+    img.onload = () => setIsImageLoaded(true);
+  }, [shouldLoadImage, backgroundImage]);
 
   return (
     <motion.div
@@ -61,16 +97,33 @@ export function SupportCard({ title, description, gradient, backgroundImage, onC
           }}
         />
 
-        {/* Background image (if provided) */}
-        {backgroundImage && (
+        {/* Background image with lazy loading */}
+        {backgroundImage && shouldLoadImage && (
           <motion.div
             layoutId={`card-image-${id}`}
             className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isImageLoaded ? 1 : 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             style={{
               backgroundImage: `url(${backgroundImage})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center top',
               backgroundRepeat: 'no-repeat'
+            }}
+          />
+        )}
+
+        {/* Loading skeleton/placeholder */}
+        {backgroundImage && !isImageLoaded && shouldLoadImage && (
+          <motion.div
+            className="absolute inset-0"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            style={{
+              background: 'linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%)',
+              animation: 'pulse 1.5s ease-in-out infinite'
             }}
           />
         )}
