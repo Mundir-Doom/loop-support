@@ -1,5 +1,5 @@
 import { motion, useMotionValue, useTransform, PanInfo } from 'motion/react';
-import { MessageCircle, Ticket } from 'lucide-react';
+import { Bot, MessageCircle, Ticket } from 'lucide-react';
 
 interface SupportModalProps {
   onClose: () => void;
@@ -102,6 +102,36 @@ export function SupportModal({ onClose, onStartChat, onOpenTicket }: SupportModa
                 </div>
               </div>
             </motion.button>
+
+            {/* Chat to Loop AI Option */}
+            <motion.a
+              href="https://ai.loop.com.ly"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-16 rounded-2xl flex items-center px-5 gap-4"
+              style={{ backgroundColor: 'rgba(11, 11, 12, 0.06)' }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{
+                duration: 0.2,
+                ease: [0.32, 0.72, 0, 1]
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: '#0B0B0C' }}
+              >
+                <Bot size={20} strokeWidth={2.5} style={{ color: '#FFFFFF' }} />
+              </div>
+              <div className="flex-1 text-left">
+                <div style={{ fontSize: '15px', fontWeight: 600, color: '#0B0B0C' }}>
+                  Chat to Loop AI
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 400, color: '#55595F' }}>
+                  Visit the Loop AI assistant
+                </div>
+              </div>
+            </motion.a>
 
             {/* Open Ticket Option */}
             <motion.button
